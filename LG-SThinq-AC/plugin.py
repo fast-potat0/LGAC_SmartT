@@ -106,6 +106,20 @@ class BasePlugin:
             if Parameters["Mode5"] == "true":
                 Domoticz.Device(Name="Ionizer", Unit=7, Image=20, TypeName="Switch", Used=1).Create()
             Domoticz.Device(Name="Care Filter", Unit=8, TypeName='Custom', Image=19, Options=self.customSensorOptions, Used=1).Create()
+
+            Options = {"LevelActions": "||||||||||",
+                       "LevelNames": "|Left-Right|None|Left|Mid-Left|Centre|Mid-Right|Right|Left-Centre|Centre-Right",
+                       "LevelOffHidden": "true",
+                       "SelectorStyle": "1"}
+
+            Domoticz.Device(Name="Swing Horizontal", Unit=9, TypeName="Selector Switch", Image=7, Options=Options, Used=1).Create()
+
+            Options = {"LevelActions": "|||||||||",
+                       "LevelNames": "|Top-Bottom|None|Top|1|2|3|4|Bottom",
+                       "LevelOffHidden": "true",
+                       "SelectorStyle": "1"}
+
+            Domoticz.Device(Name="Swing Vertical", Unit=10, TypeName="Selector Switch", Image=7, Options=Options, Used=1).Create()
         
         Domoticz.Heartbeat(int(Parameters['Mode3']))
         
@@ -200,11 +214,55 @@ class BasePlugin:
                             else:
                                 if (Devices[7].nValue != 0):
                                     Devices[7].Update(nValue = 0, sValue ="0")
-                    
-                    #Update Filter status
-                    elif result['cmd'] == 'check_Filter':
-                        Domoticz.Log("Filter:" + str(result['filter_percentage_state']))
-                        Devices[8].Update(nValue = result['filter_percentage_state'], sValue = str(result['filter_percentage_state']))
+
+                        #update Swing Horizontal
+                        swing_horizontal_direction=result['swing_horizontal']
+                        if swing_horizontal_direction == "100":
+                            sValueNew = "10"  # Left-Right
+                        elif swing_horizontal_direction == "OFF":
+                            sValueNew = "20"  # None
+                        elif swing_horizontal_direction == "1":
+                            sValueNew = "30"  # Left
+                        elif swing_horizontal_direction == "2":
+                            sValueNew = "40"  # Mid-Left
+                        elif swing_horizontal_direction == "3":
+                            sValueNew = "50"  # Centre
+                        elif swing_horizontal_direction == "4":
+                            sValueNew = "60"  # Mid-Right
+                        elif swing_horizontal_direction == "5":
+                            sValueNew = "70"  # Right
+                        elif swing_horizontal_direction == "13":
+                            sValueNew = "80"  # Left-Centre
+                        elif swing_horizontal_direction == "35":
+                            sValueNew = "90"  # Centre-Right
+                        if (Devices[9].nValue != self.powerOn or Devices[9].sValue != sValueNew):
+                            Devices[9].Update(nValue = self.powerOn, sValue = sValueNew)
+
+                        # update Swing Vertical
+                        swing_vertical_direction = result['swing_vertical']
+                        if swing_vertical_direction == "100":
+                            sValueNew = "10"  # Top-Bottom
+                        elif swing_vertical_direction == "OFF":
+                            sValueNew = "20"  # None
+                        elif swing_vertical_direction == "1":
+                            sValueNew = "30"  # Top
+                        elif swing_vertical_direction == "2":
+                            sValueNew = "40"  # 1
+                        elif swing_vertical_direction == "3":
+                            sValueNew = "50"  # 2
+                        elif swing_vertical_direction == "4":
+                            sValueNew = "60"  # 3
+                        elif swing_vertical_direction == "5":
+                            sValueNew = "70"  # 4
+                        elif swing_vertical_direction == "6":
+                            sValueNew = "80"  # Bottom
+                        if (Devices[10].nValue != self.powerOn or Devices[10].sValue != sValueNew):
+                            Devices[10].Update(nValue = self.powerOn, sValue = sValueNew)
+
+                        #Update Filter status
+                        elif result['cmd'] == 'check_Filter':
+                            Domoticz.Log("Filter:" + str(result['filter_percentage_state']))
+                            Devices[8].Update(nValue = result['filter_percentage_state'], sValue = str(result['filter_percentage_state']))
         except msgpack.UnpackException as e:
             Domoticz.Error('Unpacker exception' + str(e))
 
@@ -224,6 +282,8 @@ class BasePlugin:
             Devices[4].Update(nValue = self.powerOn, sValue = Devices[4].sValue)
             Devices[5].Update(nValue = self.powerOn, sValue = Devices[5].sValue)
             Devices[6].Update(nValue = self.powerOn, sValue = Devices[6].sValue)
+            Devices[9].Update(nValue=self.powerOn, sValue=Devices[9].sValue)
+            Devices[10].Update(nValue=self.powerOn, sValue=Devices[10].sValue)
         
         elif (Unit == 4):
             if Level == 10: # HEAT"
@@ -273,7 +333,47 @@ class BasePlugin:
             else:
                 Devices[7].Update(nValue = 0, sValue ="0")
                 self.apiRequest('turn_Ionizer', 'off')
-        
+
+        elif (Unit == 9):  # Swing horizontal
+            if (Level == 10):
+                self.apiRequest('set_horz_swing', 'ALL')
+            elif (Level == 20):
+                self.apiRequest('set_horz_swing', 'OFF')
+            elif (Level == 30):
+                self.apiRequest('set_horz_swing', 'ONE')
+            elif (Level == 40):
+                self.apiRequest('set_horz_swing', 'TWO')
+            elif (Level == 50):
+                self.apiRequest('set_horz_swing', 'THREE')
+            elif (Level == 60):
+                self.apiRequest('set_horz_swing', 'FOUR')
+            elif (Level == 70):
+                self.apiRequest('set_horz_swing', 'FIVE')
+            elif (Level == 80):
+                self.apiRequest('set_horz_swing', 'LEFT_HALF')
+            elif (Level == 90):
+                self.apiRequest('set_horz_swing', 'RIGHT_HALF')
+            Devices[9].Update(nValue=self.powerOn, sValue=str(Level))
+
+        elif (Unit == 10):  # Swing vertical
+            if (Level == 10):
+                self.apiRequest('set_vert_swing', 'ALL')
+            elif (Level == 20):
+                self.apiRequest('set_vert_swing', 'OFF')
+            elif (Level == 30):
+                self.apiRequest('set_vert_swing', 'ONE')
+            elif (Level == 40):
+                self.apiRequest('set_vert_swing', 'TWO')
+            elif (Level == 50):
+                self.apiRequest('set_vert_swing', 'THREE')
+            elif (Level == 60):
+                self.apiRequest('set_vert_swing', 'FOUR')
+            elif (Level == 70):
+                self.apiRequest('set_vert_swing', 'FIVE')
+            elif (Level == 80):
+                self.apiRequest('set_vert_swing', 'SIX')
+            Devices[10].Update(nValue=self.powerOn, sValue=str(Level))
+
         self.apiRequest('status')
 
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):

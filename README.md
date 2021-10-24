@@ -1,25 +1,32 @@
 # LGACSmartThing
 *This plugin uses the [wideq](https://github.com/sampsyo/wideq) modified library.*
+
 *This plugin contains some modified functions from the [domoticz-mirobot-plugin](https://github.com/mrin/domoticz-mirobot-plugin) library.*
+
 *This plugin contains some modified functions from the  [domoticz_daikin_BRP069A42](https://github.com/leejoow/domoticz_daikin_BRP069A42) library.*
-LG AC Smarthing Unit control for Domoticz
+
+*This plugin is based on [LGAC_SmartT](https://github.com/olinek2/LGAC_SmartT) by [olinek2](https://github.com/olinek2).*
+
+*This plugin contains some modified functions from [domoticz_lg_thinq_plugin](https://github.com/majki09/domoticz_lg_thinq_plugin) by [majki09](https://github.com/majki09).*
+
+LG AC Smart ThinQ Unit control for Domoticz. This repository adds swing control.
 
 
 Before installation plugin check the `python3`, `python3-dev`, `pip3` is installed for Domoticz plugin system:
 
-```sudo apt-get install python3 python3-dev python3-pip```.
+```sudo apt-get install python3 python3-dev python3-pip```
 
 Make sure you have libffi and openssl headers installed, you can do this on Debian-based systems (like Rasperry Pi) with:
 
-```sudo apt-get install libffi-dev libssl-dev```.
+```sudo apt-get install libffi-dev libssl-dev```
 
 Also do note that the setuptools version is too old for installing some requirements, so before trying to install this package you should update the setuptools with:
 
-```sudo pip3 install -U setuptools```.
+```sudo pip3 install -U setuptools```
 
 Install all necessary libraries for LGACServer.py:
 
-```sudo pip3 install gevent msgpack-python greenlet```.
+```sudo pip3 install gevent msgpack-python greenlet```
 
 Install [LGAC_SmartT] by typing something like:
 ```
@@ -138,13 +145,18 @@ Jun 19 08:15:57 raspberrypi systemd[1]: Started LG AC Device Server.
 Jun 19 08:15:59 raspberrypi python3[9288]: server: Starting server on 127.0.0.1 22233
 ```
 
-Copy plugin to domoticz plugins folder and restart domoticz. Add hardware from list after restart and check if it is operating:
+Copy plugin folder ```LG-SThinq-AC``` to domoticz plugins folder and restart domoticz. Add hardware from list after restart and check if it is operating:
 ``` 
 cp -Rf LG-SThinq-AC ~/domoticz/plugins/LG-SThinq-AC 
 sudo service domoticz restart
 ```
 
-![Hardware](https://github.com/olinek2/LGAC_SmartT/blob/master/Hardware.PNG)
+![Hardware](https://github.com/fast-potat0/LGAC_SmartT/blob/master/Hardware.PNG)
 
-![Controls](https://github.com/olinek2/LGAC_SmartT/blob/master/Controls.PNG)
+![Controls](https://github.com/fast-potat0/LGAC_SmartT/blob/master/Controls.PNG)
 
+# TODO
+
+- add jet mode device and control
+- add power usage in watts of the whole unit
+- improve reliability of issued commands

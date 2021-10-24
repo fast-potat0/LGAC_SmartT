@@ -122,7 +122,7 @@ def ac_commands_handler(acDevNum, token, q):
                         ac.monitor_start()
                         connRefresh=0
                 else:
-                    result = {'exception': 'command [%s] not found' % cmd} 
+                    result = {'exception': 'command [%s] not found' % cmd}
             except (Exception) as e:
                 result = {'exception': 'python-LGAC: %s' % e}
                 continue
@@ -153,33 +153,45 @@ class ACCommand(object):
                 'temp_actual' : '{0.temp_cur_c}'.format(state,'on' if state.is_on else 'off'),
                 'temp_setpoint' : '{0.temp_cfg_c}'.format(state,'on' if state.is_on else 'off'),
                 'wind_strength': state.data['WindStrength'],
-                'air_ionizer': state.data['AirClean']
+                'air_ionizer' : state.data['AirClean'],
+                'swing_vertical' : state.data['WDirVStep'],
+                'swing_horizontal' : state.data['WDirHStep']
             }
         return {'code':'None Response'}
-        
+
     @classmethod
     def set_Temp(cls, ac, level):
         return {'code': ac.set_celsius(level)}
-    
+
     @classmethod
     def turn_AC(cls, ac, state):
         return {'code': ac.set_on(state == 'on')}
-    
+
     @classmethod
     def turn_Ionizer(cls, ac, state):
         return {'code': ac.set_ionizer(state == 'on')}
-    
-    @classmethod    
+
+    @classmethod
     def set_Mode(cls, ac, modeName):
         mode = wideq.ACMode[modeName]
         return {'code': ac.set_mode(mode)}
-    
+
     @classmethod
     def set_Wind(cls, ac, levelName):
         name = wideq.ACWst[levelName]
         return {'code': ac.set_wind(name)}
-    
-    @classmethod 
+
+    @classmethod
+    def set_horz_swing(cls, ac, levelName):
+        horz_swing = wideq.ACHSwingMode[levelName]
+        return {'code': ac.set_horz_swing(horz_swing)}
+
+    @classmethod
+    def set_vert_swing(cls, ac, levelName):
+        vert_swing = wideq.ACVSwingMode[levelName]
+        return {'code': ac.set_vert_swing(vert_swing)}
+
+    @classmethod
     def check_Filter(cls, ac):
         fstatus = ac.get_filter_state()
         usedTime=float(fstatus['UseTime'])
@@ -212,4 +224,3 @@ if __name__ == '__main__':
     services.spawn(ac_commands_handler, args.acDevNum, args.token, receive)
     services.spawn(socket_msg_sender, sockets, send)
     services.join()
-

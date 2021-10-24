@@ -732,6 +732,46 @@ class Device(object):
         _, value = data[1:-1].split(':')
         return value
 
+class ACVSwingMode(enum.Enum):
+    """The vertical swing mode for an AC/HVAC device.
+
+    Blades are numbered vertically from 1 (topmost)
+    to 6.
+
+    All is 100.
+    """
+
+    OFF = "@OFF"
+    ONE = "@1"
+    TWO = "@2"
+    THREE = "@3"
+    FOUR = "@4"
+    FIVE = "@5"
+    SIX = "@6"
+    ALL = "@100"
+
+
+class ACHSwingMode(enum.Enum):
+    """The horizontal swing mode for an AC/HVAC device.
+
+    Blades are numbered horizontally from 1 (leftmost)
+    to 5.
+
+    Left half goes from 1-3, and right half goes from
+    3-5.
+
+    All is 100.
+    """
+
+    OFF = "@OFF"
+    ONE = "@1"
+    TWO = "@2"
+    THREE = "@3"
+    FOUR = "@4"
+    FIVE = "@5"
+    LEFT_HALF = "@13"
+    RIGHT_HALF = "@35"
+    ALL = "@100"
 
 class ACMode(enum.Enum):
     """The operation mode for an AC/HVAC device."""
@@ -755,10 +795,10 @@ class ACOp(enum.Enum):
     LEFT_ON = "@AC_MAIN_OPERATION_LEFT_ON_W"
     ALL_ON = "@AC_MAIN_OPERATION_ALL_ON_W"
 
- 
+
 class ACIon(enum.Enum):
     """Whether a device ionizer on or off."""
-    
+
     OFF = "@AC_MAIN_AIRCLEAN_OFF_W"
     ON = "@AC_MAIN_AIRCLEAN_ON_W"
 
@@ -814,44 +854,51 @@ class ACDevice(Device):
         return out
 
     def set_celsius(self, c):
-        """Set the device's target temperature in Celsius degrees.
-        """
+        """Set the device's target temperature in Celsius degrees."""
 
         self._set_control('TempCfg', c)
 
     def set_fahrenheit(self, f):
-        """Set the device's target temperature in Fahrenheit degrees.
-        """
+        """Set the device's target temperature in Fahrenheit degrees."""
 
         self.set_celsius(self.f2c[f])
 
     def set_mode(self, mode):
-        """Set the device's operating mode to an `OpMode` value.
-        """
+        """Set the device's operating mode to an `OpMode` value."""
 
         mode_value = self.model.enum_value('OpMode', mode.value)
         self._set_control('OpMode', mode_value)
 
     def set_on(self, is_on):
-        """Turn on or off the device (according to a boolean).
-        """
+        """Turn on or off the device (according to a boolean)."""
 
         op = ACOp.RIGHT_ON if is_on else ACOp.OFF
         op_value = self.model.enum_value('Operation', op.value)
         self._set_control('Operation', op_value)
-        
+
     def set_ionizer(self, is_on):
-        """Turn on or off ionizer (according to a boolean).
-        """
+        """Turn on or off ionizer (according to a boolean)."""
         op = ACIon.ON if is_on else ACIon.OFF
         op_value = self.model.enum_value('AirClean', op.value)
         self._set_control('AirClean', op_value)
-    
+
     def set_wind(self, level):
         """Set wind strength (according to enum).
         """
         wind_value = self.model.enum_value('WindStrength', level.value)
         self._set_control('WindStrength', wind_value)
+
+    def set_horz_swing(self, swing):
+        """Set the horizontal swing to a value from the `ACHSwingMode` enum."""
+
+        swing_value = self.model.enum_value("WDirHStep", swing.value)
+        self._set_control("WDirHStep", swing_value)
+
+    def set_vert_swing(self, swing):
+        """Set the vertical swing to a value from the `ACVSwingMode` enum."""
+
+        swing_value = self.model.enum_value("WDirVStep", swing.value)
+        self._set_control("WDirVStep", swing_value)
 
     def get_filter_state(self):
         """Get information about the filter."""
@@ -881,6 +928,16 @@ class ACDevice(Device):
         value = self._get_control('SpkVolume')
         return int(value)
 
+    def get_power(self):
+        """Get the instant power usage in watts of the whole unit"""
+
+        try:
+            value = self._get_config("InOutInstantPower")
+            return value["InOutInstantPower"]
+        except InvalidRequestError:
+            # Device does not support whole unit instant power usage
+            return 0
+
     def monitor_start(self):
         """Start monitoring the device's status."""
 
@@ -908,8 +965,7 @@ class ACDevice(Device):
 
 
 class ACStatus(object):
-    """Higher-level information about an AC device's current status.
-    """
+    """Higher-level information about an AC device's current status."""
 
     def __init__(self, ac, data):
         self.ac = ac
@@ -957,3 +1013,15 @@ class ACStatus(object):
     def is_on(self):
         op = ACOp(self.lookup_enum('Operation'))
         return op != ACOp.OFF
+
+    @property
+    def fan_speed(self):
+        return ACFanSpeed(self.lookup_enum('WindStrength'))
+
+    @property
+    def horz_swing(self):
+        return ACHSwingMode(self.lookup_enum('WDirHStep'))
+
+    @property
+    def vert_swing(self):
+        return ACVSwingMode(self.lookup_enum('WDirVStep'))
